@@ -11,7 +11,7 @@ from bot.helper.ext_utils.bot_utils import (
 from bot.helper.ext_utils.files_utils import clean_unwanted
 from bot.helper.ext_utils.status_utils import getTaskByGid
 from bot.helper.ext_utils.task_manager import stop_duplicate_check
-from bot.helper.mirror_utils.status_utils.aria2_status import Aria2Status
+from bot.helper.mirror_leech_utils.status_utils.aria2_status import Aria2Status
 from bot.helper.telegram_helper.message_utils import (
     sendMessage,
     deleteMessage,
@@ -97,8 +97,6 @@ async def _onBtDownloadComplete(api, gid):
     seed_start_time = time()
     await sleep(1)
     download = await sync_to_async(api.get_download, gid)
-    if download.options.follow_torrent == "false":
-        return
     LOGGER.info(f"onBtDownloadComplete: {download.name} - Gid: {gid}")
     if task := await getTaskByGid(gid):
         task.listener.isTorrent = True
@@ -138,7 +136,7 @@ async def _onBtDownloadComplete(api, gid):
                         f"Seeding stopped with Ratio: {task.ratio()} and Time: {task.seeding_time()}"
                     )
                     await sync_to_async(api.remove, [download], force=True, files=True)
-            else:
+            elif not task.listener.isCancelled:
                 async with task_dict_lock:
                     if task.listener.mid not in task_dict:
                         await sync_to_async(
@@ -149,6 +147,8 @@ async def _onBtDownloadComplete(api, gid):
                     task_dict[task.listener.mid].start_time = seed_start_time
                 LOGGER.info(f"Seeding started: {download.name} - Gid: {gid}")
                 await update_status_message(task.listener.message.chat.id)
+            else:
+                await sync_to_async(api.remove, [download], force=True, files=True)
         else:
             await sync_to_async(api.remove, [download], force=True, files=True)
 

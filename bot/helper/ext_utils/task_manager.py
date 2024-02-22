@@ -15,7 +15,7 @@ from bot.helper.ext_utils.bot_utils import (
 )
 from bot.helper.ext_utils.files_utils import get_base_name
 from bot.helper.ext_utils.links_utils import is_gdrive_id
-from bot.helper.mirror_utils.gdrive_utils.search import gdSearch
+from bot.helper.mirror_leech_utils.gdrive_utils.search import gdSearch
 
 
 async def stop_duplicate_check(listener):
@@ -69,11 +69,12 @@ async def check_running_tasks(mid: int, state="dl"):
                 non_queued_dl.remove(mid)
             dl_count = len(non_queued_dl)
             up_count = len(non_queued_up)
+            t_count = dl_count if state == "dl" else up_count
             is_over_limit = (
                 all_limit
                 and dl_count + up_count >= all_limit
-                and (not state_limit or dl_count >= state_limit)
-            ) or (state_limit and dl_count >= state_limit)
+                and (not state_limit or t_count >= state_limit)
+            ) or (state_limit and t_count >= state_limit)
             if is_over_limit:
                 event = Event()
                 if state == "dl":

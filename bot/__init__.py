@@ -13,7 +13,7 @@ from logging import (
     warning as log_warning,
     ERROR,
 )
-from os import remove, path as ospath, environ, getcwd
+from os import remove, path as ospath, environ
 from pymongo import MongoClient
 from pyrogram import Client as tgClient, enums
 from qbittorrentapi import Client as qbClient
@@ -488,6 +488,7 @@ bot = tgClient(
     max_concurrent_transmissions=10,
 ).start()
 bot_loop = bot.loop
+bot_name = bot.me.username
 
 scheduler = AsyncIOScheduler(timezone=str(get_localzone()), event_loop=bot_loop)
 
